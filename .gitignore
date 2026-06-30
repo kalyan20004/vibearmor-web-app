@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Environment variables (CRITICAL: NEVER UPLOAD SECRETS TO GITHUB)
+.env
+.env.*
+
+# Build outputs
+dist/
+client/dist/
+server/dist/
+build/
+*.tsbuildinfo
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+yarn-error.log*
+*.log

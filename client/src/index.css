@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@theme {
+  --color-google-blue: #4285F4;
+  --color-google-red: #EA4335;
+  --color-google-yellow: #FBBC04;
+  --color-google-green: #34A853;
+  --color-ninja-orange: #F05A28;
+  --color-vibe-bg: #0B0E14;
+}
+
+:root {
+  --background: var(--color-vibe-bg);
+  --foreground: #f8fafc;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
