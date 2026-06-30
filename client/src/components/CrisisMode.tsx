@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ShieldAlert, Send, X, Mail, Headphones } from 'lucide-react';
 
 interface CrisisModeProps {
@@ -12,9 +13,11 @@ export default function CrisisMode({ task, onDismiss }: CrisisModeProps) {
   
   const domain = task.domain?.toLowerCase() || 'academic';
   const bgImage = domain === 'work' ? '/crisis_work.png' : domain === 'coding' ? '/crisis_coding.png' : '/crisis_academic.png';
+  
+  // Use youtube-nocookie to bypass strict browser tracking protections that cause black screens
   const musicSrc = domain === 'coding' 
-    ? "https://www.youtube.com/embed/HDhR2Yhnvfo?autoplay=1" 
-    : "https://www.youtube.com/embed/n61ULEU7CO0?autoplay=1"; // Lofi chill
+    ? "https://www.youtube-nocookie.com/embed/HDhR2Yhnvfo?autoplay=1" 
+    : "https://www.youtube-nocookie.com/embed/n61ULEU7CO0?autoplay=1"; 
 
   useEffect(() => {
     // 1. Audio Persona (Tough Love)
@@ -23,7 +26,6 @@ export default function CrisisMode({ task, onDismiss }: CrisisModeProps) {
       msg.text = `Crisis Mode activated for ${task.title}. I have locked down your schedule, drafted an emergency extension request, and cued up a focus playlist. Time is running out. Let's get to work.`;
       msg.rate = 1.0;
       msg.pitch = 0.9;
-      // Find a good voice if available
       const voices = window.speechSynthesis.getVoices();
       if (voices.length > 0) {
          msg.voice = voices.find(v => v.name.includes('Google US English')) || voices[0];
@@ -44,9 +46,11 @@ export default function CrisisMode({ task, onDismiss }: CrisisModeProps) {
     }
   }, [task]);
 
-  return (
+  const gmailComposeUrl = `https://mail.google.com/mail/?view=cm&fs=1&tf=1&su=${encodeURIComponent('Extension Request: ' + task.title)}&body=${encodeURIComponent(emailDraft)}`;
+
+  const modalContent = (
     <div 
-      className="fixed inset-0 z-[100] bg-rose-950/95 flex flex-col items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-500 bg-cover bg-center"
+      className="fixed inset-0 z-[999999] bg-rose-950/95 flex flex-col items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-500 bg-cover bg-center"
       style={{ backgroundImage: `linear-gradient(to bottom, rgba(76, 5, 25, 0.9), rgba(0, 0, 0, 0.95)), url('${bgImage}')` }}
     >
       <button onClick={onDismiss} className="absolute top-6 right-6 p-2 text-rose-300 hover:text-white hover:bg-rose-900/50 rounded-full transition-colors z-50">
@@ -114,7 +118,9 @@ export default function CrisisMode({ task, onDismiss }: CrisisModeProps) {
 
           <div className="flex gap-4 mt-6">
             <a 
-              href={`mailto:?subject=Extension Request&body=${encodeURIComponent(emailDraft)}`}
+              href={gmailComposeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
               onClick={() => {
                 navigator.clipboard.writeText(emailDraft);
                 onDismiss();
@@ -132,4 +138,6 @@ export default function CrisisMode({ task, onDismiss }: CrisisModeProps) {
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
