@@ -13,14 +13,14 @@ export default function CrisisMode({ task, onDismiss }: CrisisModeProps) {
   const domain = task.domain?.toLowerCase() || 'academic';
   const bgImage = domain === 'work' ? '/crisis_work.png' : domain === 'coding' ? '/crisis_coding.png' : '/crisis_academic.png';
   const musicSrc = domain === 'coding' 
-    ? "https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1&mute=0&loop=1&playlist=jfKfPfyJRdk" 
-    : "https://www.youtube.com/embed/5qap5aO4i9A?autoplay=1&mute=0&loop=1&playlist=5qap5aO4i9A"; // Lofi chill
+    ? "https://www.youtube.com/embed/HDhR2Yhnvfo?autoplay=1" 
+    : "https://www.youtube.com/embed/n61ULEU7CO0?autoplay=1"; // Lofi chill
 
   useEffect(() => {
     // 1. Audio Persona (Tough Love)
     if ('speechSynthesis' in window) {
       const msg = new SpeechSynthesisUtterance();
-      msg.text = `Crisis Mode activated for ${task.title}. I have locked down your schedule, drafted an extension request, and cued up a focus playlist. Time is running out. Let's get to work.`;
+      msg.text = `Crisis Mode activated for ${task.title}. I have locked down your schedule, drafted an emergency extension request, and cued up a focus playlist. Time is running out. Let's get to work.`;
       msg.rate = 1.0;
       msg.pitch = 0.9;
       // Find a good voice if available
@@ -113,14 +113,16 @@ export default function CrisisMode({ task, onDismiss }: CrisisModeProps) {
           )}
 
           <div className="flex gap-4 mt-6">
-            <button onClick={() => {
-              navigator.clipboard.writeText(emailDraft);
-              alert('Email copied to clipboard! Opening mail client...');
-              window.open(`mailto:?subject=Extension Request&body=${encodeURIComponent(emailDraft)}`);
-              onDismiss();
-            }} className="flex-1 bg-white text-rose-950 hover:bg-rose-100 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
+            <a 
+              href={`mailto:?subject=Extension Request&body=${encodeURIComponent(emailDraft)}`}
+              onClick={() => {
+                navigator.clipboard.writeText(emailDraft);
+                onDismiss();
+              }} 
+              className="flex-1 bg-white text-rose-950 hover:bg-rose-100 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors"
+            >
               <Send size={18} /> Send Request
-            </button>
+            </a>
             <button onClick={onDismiss} className="flex-1 bg-rose-800/80 hover:bg-rose-700 text-white font-bold py-3 rounded-xl transition-colors border border-rose-600 backdrop-blur-md">
               I'll do the work
             </button>
