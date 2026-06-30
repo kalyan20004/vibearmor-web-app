@@ -7,6 +7,9 @@ const _models = [
   'google/gemma-4-26b-a4b-it:free',
   'meta-llama/llama-3.2-3b-instruct:free',
   'mistralai/mistral-7b-instruct:free',
+  'qwen/qwen-2-72b-instruct:free',
+  'cognitivecomputations/dolphin-mixtral-8x7b:free',
+  'nousresearch/hermes-3-llama-3.1-405b:free'
 ];
 
 async function _generate(messages: any[]): Promise<string> {
