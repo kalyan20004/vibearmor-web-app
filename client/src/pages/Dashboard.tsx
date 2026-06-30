@@ -26,15 +26,7 @@ export default function Dashboard() {
     return () => clearInterval(timer);
   }, []);
 
-  const getCountdown = (dueAt: string) => {
-    const diff = new Date(dueAt).getTime() - now;
-    if (diff <= 0) return 'OVERDUE';
-    const h = Math.floor(diff / (1000 * 60 * 60));
-    const m = Math.floor((diff / 1000 / 60) % 60);
-    const s = Math.floor((diff / 1000) % 60);
-    if (h > 48) return `${Math.floor(h / 24)} days left`;
-    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  };
+
 
   const highRisk = deadlines.filter(d => d.risk_score > 70);
   const topRisk = highRisk[0];
