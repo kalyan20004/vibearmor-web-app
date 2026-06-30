@@ -11,7 +11,7 @@ export default function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [crisisActive, setCrisisActive] = useState(false);
   const [conflict, setConflict] = useState<any>(null);
-  const [now, setNow] = useState(Date.now());
+
 
   useEffect(() => {
     // Fetch pending conflict interventions
@@ -22,8 +22,7 @@ export default function Dashboard() {
       })
       .catch(console.error);
 
-    const timer = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(timer);
+
   }, []);
 
 
