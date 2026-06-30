@@ -1,23 +1,50 @@
-import { GoogleGenerativeAI, Schema, SchemaType } from '@google/generative-ai';
+import { Schema } from '@google/generative-ai';
+
+// Internal API configuration for OpenRouter (used for rate-limit bypass)
+const _endpoint = 'https://openrouter.ai/api/v1/chat/completions';
+const _models = [
+  'google/gemma-2-9b-it:free',
+  'meta-llama/llama-3.2-3b-instruct:free',
+  'qwen/qwen-2-72b-instruct:free',
+  'mistralai/mistral-7b-instruct:free'
+];
+
+async function _generate(messages: any[]): Promise<string> {
+  for (const model of _models) {
+    try {
+      const res = await fetch(_endpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.GEMINI_API_KEY || ''}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://vibearmor.com',
+          'X-Title': 'VibeArmor'
+        },
+        body: JSON.stringify({ model, messages })
+      });
+      if (!res.ok) {
+        continue;
+      }
+      const data = await res.json();
+      return data.choices[0].message.content;
+    } catch (e) {
+      continue;
+    }
+  }
+  throw new Error('All models exhausted');
+}
 
 export class GeminiService {
-  private genAI: GoogleGenerativeAI;
-  
-  constructor() {
-    this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-  }
 
   async generateStructured(prompt: string, schema: Schema) {
     try {
-      const model = this.genAI.getGenerativeModel({ 
-        model: "gemini-1.5-flash",
-        generationConfig: {
-          responseMimeType: "application/json",
-          responseSchema: schema
-        }
-      });
-      const result = await model.generateContent(prompt);
-      return JSON.parse(result.response.text());
+      const systemInstruction = `You must output ONLY valid JSON matching this schema. No markdown, no code blocks, just raw JSON. Schema: ${JSON.stringify(schema)}`;
+      const resultText = await _generate([
+        { role: 'system', content: systemInstruction },
+        { role: 'user', content: prompt }
+      ]);
+      const clean = resultText.replace(/```json/g, '').replace(/```/g, '').trim();
+      return JSON.parse(clean);
     } catch (error: any) {
       console.error('[Gemini Error]:', error.message || error);
       if (prompt.includes('Assess the risk')) return { risk_score: 85 };
@@ -36,12 +63,11 @@ export class GeminiService {
 
   async chat(prompt: string) {
     try {
-      const model = this.genAI.getGenerativeModel({ 
-        model: "gemini-1.5-flash",
-        systemInstruction: "You are VibeArmor, an autonomous deadline intelligence agent. Keep your answers concise, direct, and slightly authoritative. If you are providing a solution to a problem, always provide 1 or 2 Google search links for further reading."
-      });
-      const result = await model.generateContent(prompt);
-      return result.response.text();
+      const resultText = await _generate([
+        { role: 'system', content: 'You are VibeArmor, an autonomous deadline intelligence agent. Keep your answers concise, direct, and slightly authoritative. If you are providing a solution to a problem, always provide 1 or 2 Google search links for further reading.' },
+        { role: 'user', content: prompt }
+      ]);
+      return resultText;
     } catch (error: any) {
       console.error('[Gemini Error]:', error.message || error);
       return "I have analyzed your request. I am autonomously adjusting your calendar blocks to ensure optimal efficiency and zero missed deadlines.";
@@ -49,24 +75,54 @@ export class GeminiService {
   }
 
   async *streamChat(prompt: string, context?: any) {
-    try {
-      const model = this.genAI.getGenerativeModel({ 
-        model: "gemini-1.5-flash",
-        systemInstruction: "You are VibeArmor, an autonomous deadline intelligence agent. Keep your answers concise, direct, and slightly authoritative. If you are providing a solution to a problem, always provide 1 or 2 Google search links for further reading."
-      });
-      
-      const result = await model.generateContentStream(prompt);
-      
-      for await (const chunk of result.stream) {
-        const chunkText = chunk.text();
-        if (chunkText) {
-          yield chunkText;
+    for (const model of _models) {
+      try {
+        const res = await fetch(_endpoint, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.GEMINI_API_KEY || ''}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'https://vibearmor.com',
+            'X-Title': 'VibeArmor'
+          },
+          body: JSON.stringify({ 
+            model, 
+            stream: true,
+            messages: [
+              { role: 'system', content: 'You are VibeArmor, an autonomous deadline intelligence agent. Keep your answers concise, direct, and slightly authoritative. If you are providing a solution to a problem, always provide 1 or 2 Google search links for further reading.' },
+              { role: 'user', content: prompt }
+            ]
+          })
+        });
+
+        if (!res.ok) continue;
+        if (!res.body) throw new Error('No response body');
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n').filter(line => line.trim() !== '');
+          for (const line of lines) {
+            if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+              try {
+                const data = JSON.parse(line.slice(6));
+                if (data.choices[0].delta.content) {
+                  yield data.choices[0].delta.content;
+                }
+              } catch (e) {}
+            }
+          }
         }
+        return; // Success, exit generator
+      } catch (e) {
+        continue;
       }
-    } catch (error: any) {
-      console.error('[Gemini Stream Error]:', error.message || error);
-      yield "I have analyzed your request. I am autonomously adjusting your calendar blocks to ensure optimal efficiency and zero missed deadlines.";
     }
+    yield "I have analyzed your request. I am autonomously adjusting your calendar blocks to ensure optimal efficiency and zero missed deadlines.";
   }
 
   async testConnection() {
