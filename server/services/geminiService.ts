@@ -69,7 +69,7 @@ export class GeminiService {
   async chat(prompt: string) {
     try {
       const resultText = await _generate([
-        { role: 'system', content: 'You are VibeArmor, an autonomous deadline intelligence agent. Keep your answers concise, direct, and slightly authoritative.' },
+        { role: 'system', content: 'You are VibeArmor, an autonomous deadline intelligence agent. Keep your answers concise, direct, and slightly authoritative. If you are providing a solution to a problem, always provide 1 or 2 Google search links for further reading.' },
         { role: 'user', content: prompt }
       ]);
       console.log('[Gemini] chat success');
@@ -95,7 +95,7 @@ export class GeminiService {
             model, 
             stream: true,
             messages: [
-              { role: 'system', content: 'You are VibeArmor, an autonomous deadline intelligence agent. Keep your answers concise, direct, and slightly authoritative.' },
+              { role: 'system', content: 'You are VibeArmor, an autonomous deadline intelligence agent. Keep your answers concise, direct, and slightly authoritative. If you are providing a solution to a problem, always provide 1 or 2 Google search links for further reading.' },
               { role: 'user', content: prompt }
             ]
           })
