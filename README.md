@@ -158,6 +158,4 @@ npm run dev
 ```
 
 Navigate to `http://localhost:5173` to interact with the Sentinel!
-
----
-*Built with ❤️ for the Google AI Hackathon.*
+.*
